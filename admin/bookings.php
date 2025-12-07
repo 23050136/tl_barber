@@ -17,10 +17,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'approve') {
             $stmt = $pdo->prepare("UPDATE bookings SET status = 'confirmed' WHERE id = ?");
             if ($stmt->execute([$booking_id])) {
+<<<<<<< HEAD
                 // Generate QR code
                 $qr_code = 'BOOKING-' . $booking_id . '-' . time();
                 $stmt = $pdo->prepare("UPDATE bookings SET qr_code = ? WHERE id = ?");
                 $stmt->execute([$qr_code, $booking_id]);
+=======
+                // Generate QR code if column exists
+                try {
+                    $pdo->query("SELECT qr_code FROM bookings LIMIT 1");
+                    $qr_code = 'BOOKING-' . $booking_id . '-' . time();
+                    $stmt = $pdo->prepare("UPDATE bookings SET qr_code = ? WHERE id = ?");
+                    $stmt->execute([$qr_code, $booking_id]);
+                } catch (PDOException $e) {
+                    // Column doesn't exist, skip QR generation
+                }
+>>>>>>> e906b55 (update code)
                 
                 // Create notification
                 $stmt = $pdo->prepare("SELECT user_id FROM bookings WHERE id = ?");
@@ -85,11 +97,29 @@ $stmt->execute();
 $bookings = $stmt->fetchAll();
 
 // Generate QR codes for confirmed bookings that don't have one
+<<<<<<< HEAD
 foreach ($bookings as $booking) {
     if ($booking['status'] === 'confirmed' && empty($booking['qr_code'])) {
         $qr_code = 'BOOKING-' . $booking['id'] . '-' . time();
         $stmt = $pdo->prepare("UPDATE bookings SET qr_code = ? WHERE id = ?");
         $stmt->execute([$qr_code, $booking['id']]);
+=======
+// First check if qr_code column exists
+try {
+    $pdo->query("SELECT qr_code FROM bookings LIMIT 1");
+    $qr_column_exists = true;
+} catch (PDOException $e) {
+    $qr_column_exists = false;
+}
+
+if ($qr_column_exists) {
+    foreach ($bookings as $booking) {
+        if ($booking['status'] === 'confirmed' && empty($booking['qr_code'] ?? '')) {
+            $qr_code = 'BOOKING-' . $booking['id'] . '-' . time();
+            $stmt = $pdo->prepare("UPDATE bookings SET qr_code = ? WHERE id = ?");
+            $stmt->execute([$qr_code, $booking['id']]);
+        }
+>>>>>>> e906b55 (update code)
     }
 }
 ?>
