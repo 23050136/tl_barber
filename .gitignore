@@ -1,0 +1,37 @@
+# Dependencies
+/vendor/
+composer.lock
+
+# Configuration
+config/local.php
+
+# Logs
+*.log
+logs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+
+# Images (user uploaded)
+images/uploads/
+images/services/*.jpg
+images/services/*.png
+images/services/*.jpeg
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
