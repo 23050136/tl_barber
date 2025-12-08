@@ -23,6 +23,7 @@ if ($service_id) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = sanitize($_POST['name'] ?? '');
     $description = sanitize($_POST['description'] ?? '');
+    $image = sanitize($_POST['image'] ?? '');
     $price = floatval($_POST['price'] ?? 0);
     $duration = intval($_POST['duration'] ?? 0);
     $is_featured = isset($_POST['is_featured']) ? 1 : 0;
@@ -34,10 +35,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Update
             $stmt = $pdo->prepare("
                 UPDATE services 
-                SET name = ?, description = ?, price = ?, duration = ?, is_featured = ?
+                SET name = ?, description = ?, price = ?, duration = ?, is_featured = ?, image = ?
                 WHERE id = ?
             ");
-            if ($stmt->execute([$name, $description, $price, $duration, $is_featured, $service_id])) {
+            if ($stmt->execute([$name, $description, $price, $duration, $is_featured, $image, $service_id])) {
                 $success = 'Cập nhật dịch vụ thành công';
                 $service = $pdo->prepare("SELECT * FROM services WHERE id = ?");
                 $service->execute([$service_id]);
@@ -48,10 +49,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             // Insert
             $stmt = $pdo->prepare("
-                INSERT INTO services (name, description, price, duration, is_featured)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO services (name, description, price, duration, is_featured, image)
+                VALUES (?, ?, ?, ?, ?, ?)
             ");
-            if ($stmt->execute([$name, $description, $price, $duration, $is_featured])) {
+            if ($stmt->execute([$name, $description, $price, $duration, $is_featured, $image])) {
                 $success = 'Thêm dịch vụ thành công';
                 redirect(BASE_URL . 'admin/services.php');
             } else {
@@ -100,6 +101,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <textarea id="description" name="description" class="form-control" rows="4"><?php echo htmlspecialchars($service['description'] ?? $_POST['description'] ?? ''); ?></textarea>
                 </div>
                 
+                <div class="form-group">
+                    <label for="image"><i class="fas fa-image"></i> Đường dẫn ảnh (tùy chọn)</label>
+                    <input type="text" id="image" name="image" class="form-control"
+                           placeholder="vd: images/services/cat-toc.jpg hoặc https://..."
+                           value="<?php echo htmlspecialchars($service['image'] ?? $_POST['image'] ?? ''); ?>">
+                    <small style="color: var(--text-light);">
+                        Dùng đường dẫn tương đối trong thư mục dự án (vd: images/services/ten-anh.jpg) hoặc URL tuyệt đối.
+                    </small>
+                </div>
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
                         <label for="price"><i class="fas fa-money-bill-wave"></i> Giá (VNĐ) *</label>

@@ -17,12 +17,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'approve') {
             $stmt = $pdo->prepare("UPDATE bookings SET status = 'confirmed' WHERE id = ?");
             if ($stmt->execute([$booking_id])) {
-<<<<<<< HEAD
-                // Generate QR code
-                $qr_code = 'BOOKING-' . $booking_id . '-' . time();
-                $stmt = $pdo->prepare("UPDATE bookings SET qr_code = ? WHERE id = ?");
-                $stmt->execute([$qr_code, $booking_id]);
-=======
                 // Generate QR code if column exists
                 try {
                     $pdo->query("SELECT qr_code FROM bookings LIMIT 1");
@@ -32,7 +26,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } catch (PDOException $e) {
                     // Column doesn't exist, skip QR generation
                 }
->>>>>>> e906b55 (update code)
                 
                 // Create notification
                 $stmt = $pdo->prepare("SELECT user_id FROM bookings WHERE id = ?");

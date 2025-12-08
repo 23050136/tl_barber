@@ -33,15 +33,12 @@
                 <div class="footer-section">
                     <h4>Liên hệ</h4>
                     <ul class="contact-info">
-                        <li><i class="fas fa-map-marker-alt"></i> 123 Đường ABC, Quận XYZ, TP.HCM</li>
-                        <li><i class="fas fa-phone"></i> 0123 456 789</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 504, phú lợi, Thành Phố Hồ Chí Minh</li>
+                        <li><i class="fas fa-phone"></i> 0398556089</li>
                         <li><i class="fas fa-envelope"></i> info@tlbarber.com</li>
                         <li><i class="fas fa-clock"></i> 9:00 - 20:00 (T2 - CN)</li>
                     </ul>
                 </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; <?php echo date('Y'); ?> <?php echo SITE_NAME; ?>. Tất cả quyền được bảo lưu.</p>
             </div>
         </div>
     </footer>

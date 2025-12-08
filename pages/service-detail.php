@@ -53,7 +53,11 @@ $total_reviews = $rating_data['total_reviews'] ?? 0;
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin-bottom: 3rem;">
             <div>
                 <div class="card-img" style="height: 400px;">
-                    <i class="fas fa-cut" style="font-size: 5rem;"></i>
+                    <?php if (!empty($service['image'])): ?>
+                        <img src="<?php echo BASE_URL . htmlspecialchars($service['image']); ?>" alt="<?php echo htmlspecialchars($service['name']); ?>" style="width:100%; height:100%; object-fit: cover;">
+                    <?php else: ?>
+                        <i class="fas fa-cut" style="font-size: 5rem;"></i>
+                    <?php endif; ?>
                 </div>
             </div>
             <div>

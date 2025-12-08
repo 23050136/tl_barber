@@ -23,7 +23,11 @@ $services = $stmt->fetchAll();
                         </div>
                     <?php endif; ?>
                     <div class="card-img">
-                        <i class="fas fa-cut"></i>
+                        <?php if (!empty($service['image'])): ?>
+                            <img src="<?php echo BASE_URL . htmlspecialchars($service['image']); ?>" alt="<?php echo htmlspecialchars($service['name']); ?>" style="width:100%; height:100%; object-fit: cover;">
+                        <?php else: ?>
+                            <i class="fas fa-cut"></i>
+                        <?php endif; ?>
                     </div>
                     <div class="card-body">
                         <div class="service-price"><?php echo formatPrice($service['price']); ?></div>
