@@ -65,13 +65,6 @@ $stmt->execute([$current_user['id']]);
 $bookings = $stmt->fetchAll();
 
 // Generate QR codes for confirmed bookings that don't have one
-<<<<<<< HEAD
-foreach ($bookings as $booking) {
-    if (in_array($booking['status'], ['confirmed', 'pending']) && empty($booking['qr_code'])) {
-        $qr_code = 'BOOKING-' . $booking['id'] . '-' . time();
-        $stmt = $pdo->prepare("UPDATE bookings SET qr_code = ? WHERE id = ?");
-        $stmt->execute([$qr_code, $booking['id']]);
-=======
 // First check if qr_code column exists
 try {
     $pdo->query("SELECT qr_code FROM bookings LIMIT 1");
@@ -87,7 +80,6 @@ if ($qr_column_exists) {
             $stmt = $pdo->prepare("UPDATE bookings SET qr_code = ? WHERE id = ?");
             $stmt->execute([$qr_code, $booking['id']]);
         }
->>>>>>> e906b55 (update code)
     }
 }
 ?>
@@ -175,21 +167,13 @@ if ($qr_column_exists) {
                             <?php endif; ?>
                             
                             <?php if (in_array($booking['status'], ['confirmed', 'pending'])): ?>
-<<<<<<< HEAD
-                                <?php if (empty($booking['payment_status']) || $booking['payment_status'] !== 'paid'): ?>
-=======
                                 <?php if (empty($booking['payment_status'] ?? '') || ($booking['payment_status'] ?? '') !== 'paid'): ?>
->>>>>>> e906b55 (update code)
                                     <a href="<?php echo BASE_URL; ?>pages/payment.php?booking_id=<?php echo $booking['id']; ?>" 
                                        class="btn btn-primary" style="font-size: 0.9rem; padding: 8px 15px; margin-top: 0.5rem;">
                                         <i class="fas fa-credit-card"></i> Thanh toán
                                     </a>
                                 <?php endif; ?>
-<<<<<<< HEAD
-                                <?php if ($booking['qr_code']): ?>
-=======
                                 <?php if (!empty($booking['qr_code'] ?? '')): ?>
->>>>>>> e906b55 (update code)
                                     <a href="<?php echo BASE_URL; ?>pages/qr-display.php?code=<?php echo urlencode($booking['qr_code']); ?>" 
                                        class="btn btn-secondary" style="font-size: 0.9rem; padding: 8px 15px; margin-top: 0.5rem;">
                                         <i class="fas fa-qrcode"></i> Mã QR

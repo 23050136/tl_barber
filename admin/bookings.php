@@ -76,8 +76,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Filter by date
 $filter_date = $_GET['date'] ?? '';
 $where_clause = "1=1";
+$params = [];
 if ($filter_date) {
-    $where_clause = "b.booking_date = '" . $pdo->quote($filter_date) . "'";
+    $where_clause = "b.booking_date = ?";
+    $params[] = $filter_date;
 }
 
 // Get bookings
@@ -93,17 +95,10 @@ $stmt = $pdo->prepare("
     WHERE $where_clause
     ORDER BY b.booking_date DESC, b.booking_time DESC
 ");
-$stmt->execute();
+$stmt->execute($params);
 $bookings = $stmt->fetchAll();
 
 // Generate QR codes for confirmed bookings that don't have one
-<<<<<<< HEAD
-foreach ($bookings as $booking) {
-    if ($booking['status'] === 'confirmed' && empty($booking['qr_code'])) {
-        $qr_code = 'BOOKING-' . $booking['id'] . '-' . time();
-        $stmt = $pdo->prepare("UPDATE bookings SET qr_code = ? WHERE id = ?");
-        $stmt->execute([$qr_code, $booking['id']]);
-=======
 // First check if qr_code column exists
 try {
     $pdo->query("SELECT qr_code FROM bookings LIMIT 1");
@@ -119,7 +114,6 @@ if ($qr_column_exists) {
             $stmt = $pdo->prepare("UPDATE bookings SET qr_code = ? WHERE id = ?");
             $stmt->execute([$qr_code, $booking['id']]);
         }
->>>>>>> e906b55 (update code)
     }
 }
 ?>
