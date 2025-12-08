@@ -47,6 +47,9 @@
     </footer>
     
     <div id="notification-toast" class="notification-toast"></div>
+    <a href="https://zalo.me/098556089" class="zalo-fab" target="_blank" rel="noopener" aria-label="Chat Zalo">
+        Zalo
+    </a>
     
     <script src="<?php echo ASSETS_PATH; ?>js/main.js"></script>
 </body>
