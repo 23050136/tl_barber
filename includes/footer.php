@@ -24,10 +24,10 @@
                 <div class="footer-section">
                     <h4>Thông tin</h4>
                     <ul>
-                        <li><a href="#">Về chúng tôi</a></li>
-                        <li><a href="#">Đội ngũ barber</a></li>
-                        <li><a href="#">Chính sách hủy lịch</a></li>
-                        <li><a href="#">Liên hệ</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>pages/about.php">Về chúng tôi</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>pages/about.php#team">Đội ngũ barber</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>pages/about.php#contact">Liên hệ</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>pages/services.php">Dịch vụ</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">

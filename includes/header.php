@@ -24,6 +24,7 @@ $current_user = getCurrentUser();
                 <ul class="nav-menu">
                     <li><a href="<?php echo BASE_URL; ?>index.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>">Trang chủ</a></li>
                     <li><a href="<?php echo BASE_URL; ?>pages/services.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'services.php' ? 'active' : ''; ?>">Dịch vụ</a></li>
+                    <li><a href="<?php echo BASE_URL; ?>pages/about.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'about.php' ? 'active' : ''; ?>">Về chúng tôi</a></li>
                     <?php if ($current_user): ?>
                         <li><a href="<?php echo BASE_URL; ?>pages/booking.php">Đặt lịch</a></li>
                         <li><a href="<?php echo BASE_URL; ?>pages/booking-history.php">Lịch sử</a></li>
