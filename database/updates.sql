@@ -1,4 +1,4 @@
--- Additional tables for advanced features
+mysql-- Additional tables for advanced features
 
 -- Payment table (fake payment system)
 ALTER TABLE bookings ADD COLUMN payment_status ENUM('pending', 'paid', 'refunded') DEFAULT 'pending';
