@@ -24,7 +24,7 @@ $services = $stmt->fetchAll();
                     <?php endif; ?>
                     <div class="card-img">
                         <?php if (!empty($service['image'])): ?>
-                            <img src="<?php echo BASE_URL . htmlspecialchars($service['image']); ?>" alt="<?php echo htmlspecialchars($service['name']); ?>" style="width:100%; height:100%; object-fit: cover;">
+                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTu-jAdt7StVtDw1YQ-gYz-muld4aS2LwHiQ&s); ?>" alt="<?php echo htmlspecialchars($service['name']); ?>" style="width:100%; height:100%; object-fit: cover;">
                         <?php else: ?>
                             <i class="fas fa-cut"></i>
                         <?php endif; ?>
