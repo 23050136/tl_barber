@@ -181,16 +181,24 @@ if ($qr_column_exists) {
                                 <?php endif; ?>
                             <?php endif; ?>
                             
-                            <?php if ($booking['status'] === 'completed'): ?>
+                            <?php
+                            // Cho phép đánh giá khi đã hoàn thành
+                            // hoặc đã xác nhận và đã qua thời gian kết thúc (start + duration)
+                            $booking_start = strtotime($booking['booking_date'] . ' ' . $booking['booking_time']);
+                            $duration_minutes = intval($booking['duration'] ?? 0);
+                            $booking_end = $booking_start + ($duration_minutes > 0 ? $duration_minutes * 60 : 0);
+                            $is_past_confirmed = ($booking['status'] === 'confirmed' && time() >= $booking_end);
+                            $can_review = ($booking['status'] === 'completed') || $is_past_confirmed;
+                            ?>
+                            <?php if ($can_review): ?>
                                 <?php
-                                // Check if user has already reviewed
                                 $stmt = $pdo->prepare("SELECT id FROM reviews WHERE booking_id = ?");
                                 $stmt->execute([$booking['id']]);
                                 $has_review = $stmt->fetch();
                                 ?>
                                 <?php if (!$has_review): ?>
                                     <a href="<?php echo BASE_URL; ?>pages/review.php?booking_id=<?php echo $booking['id']; ?>" 
-                                       class="btn btn-success" style="font-size: 0.9rem; padding: 8px 15px;">
+                                       class="btn btn-success" style="font-size: 0.9rem; padding: 8px 15px; margin-top: 0.5rem;">
                                         <i class="fas fa-star"></i> Đánh giá
                                     </a>
                                 <?php else: ?>
