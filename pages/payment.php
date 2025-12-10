@@ -28,6 +28,13 @@ if (!$booking) {
     redirect(BASE_URL . 'pages/booking-history.php');
 }
 
+$has_payment_columns = true;
+try {
+    $pdo->query("SELECT payment_status, payment_method, payment_transaction_id FROM bookings LIMIT 1");
+} catch (PDOException $e) {
+    $has_payment_columns = false;
+}
+
 $error = '';
 $success = '';
 
@@ -41,16 +48,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Generate fake transaction ID
         $transaction_id = 'TXN' . time() . rand(1000, 9999);
         
-        // Update booking
-        $stmt = $pdo->prepare("
-            UPDATE bookings 
-            SET payment_status = 'paid', 
-                payment_method = ?, 
-                payment_transaction_id = ?
-            WHERE id = ?
-        ");
+        if ($has_payment_columns) {
+            $stmt = $pdo->prepare("
+                UPDATE bookings 
+                SET payment_status = 'paid', 
+                    payment_method = ?, 
+                    payment_transaction_id = ?
+                WHERE id = ?
+            ");
+            $update_ok = $stmt->execute([$payment_method, $transaction_id, $booking_id]);
+        } else {
+            // Fallback nếu chưa có cột thanh toán: chỉ cập nhật trạng thái thành confirmed
+            $stmt = $pdo->prepare("UPDATE bookings SET status = 'confirmed' WHERE id = ?");
+            $update_ok = $stmt->execute([$booking_id]);
+        }
         
-        if ($stmt->execute([$payment_method, $transaction_id, $booking_id])) {
+        if ($update_ok) {
             // Create notification
             $stmt = $pdo->prepare("
                 INSERT INTO notifications (user_id, booking_id, type, title, message)
@@ -109,10 +122,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             <?php endif; ?>
             
-            <?php if ($booking['payment_status'] === 'paid'): ?>
+            <?php $payment_status = $booking['payment_status'] ?? 'unpaid'; ?>
+            <?php if ($payment_status === 'paid'): ?>
                 <div class="alert" style="background: var(--success-color); color: white; padding: 1rem; border-radius: 5px; margin-bottom: 1rem;">
                     <i class="fas fa-check-circle"></i> Đã thanh toán
-                    <?php if ($booking['payment_transaction_id']): ?>
+                    <?php if (!empty($booking['payment_transaction_id'] ?? '')): ?>
                         <br><small>Mã giao dịch: <?php echo htmlspecialchars($booking['payment_transaction_id']); ?></small>
                     <?php endif; ?>
                 </div>

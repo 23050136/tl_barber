@@ -23,7 +23,8 @@ $stmt = $pdo->query("SELECT COUNT(*) as count FROM users WHERE role = 'customer'
 $total_customers = $stmt->fetch()['count'];
 
 $stmt = $pdo->query("SELECT AVG(rating) as avg_rating FROM reviews");
-$avg_rating = round($stmt->fetch()['avg_rating'], 1);
+$avg_row = $stmt->fetch();
+$avg_rating = $avg_row && $avg_row['avg_rating'] !== null ? round((float)$avg_row['avg_rating'], 1) : 0;
 ?>
 
 <!-- Hero Section -->
@@ -227,8 +228,8 @@ $avg_rating = round($stmt->fetch()['avg_rating'], 1);
                         <div>
                             <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">Địa chỉ</h3>
                             <p style="color: var(--text-light); line-height: 1.8;">
-                                123 Đường ABC, Phường XYZ<br>
-                                Quận 1, TP. Hồ Chí Minh
+                                504 Đại Lộ Bình Dương, Hiệp Thành<br>
+                                Thủ Dầu Một, Bình Dương
                             </p>
                         </div>
                     </div>
@@ -244,11 +245,8 @@ $avg_rating = round($stmt->fetch()['avg_rating'], 1);
                         <div>
                             <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">Điện thoại</h3>
                             <p style="color: var(--text-light); line-height: 1.8;">
-                                <a href="tel:0123456789" style="color: var(--primary-color); text-decoration: none;">
-                                    0123 456 789
-                                </a><br>
-                                <a href="tel:0987654321" style="color: var(--primary-color); text-decoration: none;">
-                                    0987 654 321
+                                <a href="tel:0398556089" style="color: var(--primary-color); text-decoration: none;">
+                                    0398556089
                                 </a>
                             </p>
                         </div>
