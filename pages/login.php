@@ -24,7 +24,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($user && password_verify($password, $user['password'])) {
             $token = generateJWT($user);
             setcookie('auth_token', $token, time() + JWT_EXPIRATION, '/');
-            redirect(BASE_URL . 'index.php');
+            
+            // Redirect based on user role
+            if ($user['role'] === 'admin') {
+                redirect(BASE_URL . 'admin/index.php');
+            } elseif ($user['role'] === 'barber') {
+                redirect(BASE_URL . 'barber/index.php');
+            } else {
+                redirect(BASE_URL . 'index.php');
+            }
         } else {
             $error = 'Email hoặc mật khẩu không đúng';
         }

@@ -1,5 +1,0 @@
--- Add reply columns to reviews table
-ALTER TABLE reviews 
-ADD COLUMN IF NOT EXISTS reply TEXT DEFAULT NULL,
-ADD COLUMN IF NOT EXISTS reply_at TIMESTAMP NULL DEFAULT NULL;
-

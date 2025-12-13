@@ -27,12 +27,17 @@ $current_user = getCurrentUser();
                     <li><a href="<?php echo BASE_URL; ?>pages/about.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'about.php' ? 'active' : ''; ?>">Về chúng tôi</a></li>
                     <li><a href="<?php echo BASE_URL; ?>pages/location.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'location.php' ? 'active' : ''; ?>">Địa chỉ TL Barber</a></li>
                     <?php if ($current_user): ?>
-                        <li><a href="<?php echo BASE_URL; ?>pages/booking.php">Đặt lịch</a></li>
-                        <li><a href="<?php echo BASE_URL; ?>pages/booking-history.php">Lịch sử</a></li>
                         <?php if ($current_user['role'] === 'admin'): ?>
                             <li><a href="<?php echo BASE_URL; ?>admin/index.php" style="color: var(--secondary-color);">
                                 <i class="fas fa-shield-alt"></i> Admin
                             </a></li>
+                        <?php elseif ($current_user['role'] === 'barber'): ?>
+                            <li><a href="<?php echo BASE_URL; ?>barber/index.php" style="color: var(--secondary-color);">
+                                <i class="fas fa-calendar-alt"></i> Lịch làm việc
+                            </a></li>
+                        <?php else: ?>
+                            <li><a href="<?php echo BASE_URL; ?>pages/booking.php">Đặt lịch</a></li>
+                            <li><a href="<?php echo BASE_URL; ?>pages/booking-history.php">Lịch sử</a></li>
                         <?php endif; ?>
                         <li class="nav-user">
                             <a href="#" class="user-menu-toggle">

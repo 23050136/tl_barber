@@ -15,16 +15,54 @@ $stmt = $pdo->query("
 $barbers = $stmt->fetchAll();
 
 
-// Get statistics
-$stmt = $pdo->query("SELECT COUNT(*) as count FROM bookings WHERE status = 'completed'");
-$total_bookings = $stmt->fetch()['count'];
+// Get statistics from statistics table (admin-managed) or fallback to database calculation
+$stats_data = [];
+try {
+    $stmt = $pdo->query("SELECT stat_key, stat_value, stat_label FROM statistics WHERE is_active = 1 ORDER BY display_order ASC, id ASC");
+    $stats_rows = $stmt->fetchAll();
+    
+    foreach ($stats_rows as $row) {
+        $stats_data[$row['stat_key']] = [
+            'value' => $row['stat_value'],
+            'label' => $row['stat_label']
+        ];
+    }
+} catch (PDOException $e) {
+    // Table doesn't exist yet, use fallback calculation
+    $stats_data = [];
+}
 
-$stmt = $pdo->query("SELECT COUNT(*) as count FROM users WHERE role = 'customer'");
-$total_customers = $stmt->fetch()['count'];
+// Use statistics from table if available, otherwise calculate from database
+$total_customers = $stats_data['total_customers']['value'] ?? null;
+$total_bookings = $stats_data['total_bookings']['value'] ?? null;
+$avg_rating = $stats_data['avg_rating']['value'] ?? null;
+$total_barbers = $stats_data['total_barbers']['value'] ?? null;
 
-$stmt = $pdo->query("SELECT AVG(rating) as avg_rating FROM reviews");
-$avg_row = $stmt->fetch();
-$avg_rating = $avg_row && $avg_row['avg_rating'] !== null ? round((float)$avg_row['avg_rating'], 1) : 0;
+// Fallback to database calculation if statistics table doesn't have data
+if ($total_customers === null) {
+    $stmt = $pdo->query("SELECT COUNT(*) as count FROM users WHERE role = 'customer'");
+    $total_customers = number_format($stmt->fetch()['count']) . '+';
+}
+if ($total_bookings === null) {
+    $stmt = $pdo->query("SELECT COUNT(*) as count FROM bookings WHERE status = 'completed'");
+    $total_bookings = number_format($stmt->fetch()['count']) . '+';
+}
+if ($avg_rating === null) {
+    $stmt = $pdo->query("SELECT AVG(rating) as avg_rating FROM reviews");
+    $avg_row = $stmt->fetch();
+    $avg_rating = $avg_row && $avg_row['avg_rating'] !== null ? round((float)$avg_row['avg_rating'], 1) : '4.8';
+    $avg_rating = $avg_rating . '/5';
+}
+if ($total_barbers === null) {
+    $stmt = $pdo->query("SELECT COUNT(*) as count FROM barbers WHERE is_available = 1");
+    $total_barbers = number_format($stmt->fetch()['count']) . '+';
+}
+
+// Get labels
+$customer_label = $stats_data['total_customers']['label'] ?? 'Khách hàng tin tưởng';
+$booking_label = $stats_data['total_bookings']['label'] ?? 'Lượt đặt lịch';
+$rating_label = $stats_data['avg_rating']['label'] ?? 'Đánh giá trung bình';
+$barber_label = $stats_data['total_barbers']['label'] ?? 'Barber chuyên nghiệp';
 ?>
 
 <!-- Hero Section -->
@@ -166,9 +204,9 @@ $avg_rating = $avg_row && $avg_row['avg_rating'] !== null ? round((float)$avg_ro
                     <i class="fas fa-users" style="font-size: 2rem; color: white;"></i>
                 </div>
                 <h3 style="font-size: 3rem; color: var(--primary-color); margin-bottom: 10px; font-weight: 700;">
-                    <?php echo number_format($total_customers); ?>+
+                    <?php echo $total_customers; ?>
                 </h3>
-                <p style="color: var(--text-dark); font-size: 1.1rem; font-weight: 500; margin-bottom: 5px;">Khách hàng tin tưởng</p>
+                <p style="color: var(--text-dark); font-size: 1.1rem; font-weight: 500; margin-bottom: 5px;"><?php echo $customer_label; ?></p>
                 <p style="color: var(--text-light); font-size: 0.95rem; margin: 0;">Được yêu mến và tin cậy</p>
             </div>
             
@@ -180,9 +218,9 @@ $avg_rating = $avg_row && $avg_row['avg_rating'] !== null ? round((float)$avg_ro
                     <i class="fas fa-calendar-check" style="font-size: 2rem; color: white;"></i>
                 </div>
                 <h3 style="font-size: 3rem; color: var(--primary-color); margin-bottom: 10px; font-weight: 700;">
-                    <?php echo number_format($total_bookings); ?>+
+                    <?php echo $total_bookings; ?>
                 </h3>
-                <p style="color: var(--text-dark); font-size: 1.1rem; font-weight: 500; margin-bottom: 5px;">Lượt đặt lịch</p>
+                <p style="color: var(--text-dark); font-size: 1.1rem; font-weight: 500; margin-bottom: 5px;"><?php echo $booking_label; ?></p>
                 <p style="color: var(--text-light); font-size: 0.95rem; margin: 0;">Phục vụ chuyên nghiệp</p>
             </div>
             
@@ -194,9 +232,9 @@ $avg_rating = $avg_row && $avg_row['avg_rating'] !== null ? round((float)$avg_ro
                     <i class="fas fa-star" style="font-size: 2rem; color: var(--primary-color);"></i>
                 </div>
                 <h3 style="font-size: 3rem; color: var(--primary-color); margin-bottom: 10px; font-weight: 700;">
-                    <?php echo $avg_rating; ?>/5
+                    <?php echo $avg_rating; ?>
                 </h3>
-                <p style="color: var(--text-dark); font-size: 1.1rem; font-weight: 500; margin-bottom: 5px;">Đánh giá trung bình</p>
+                <p style="color: var(--text-dark); font-size: 1.1rem; font-weight: 500; margin-bottom: 5px;"><?php echo $rating_label; ?></p>
                 <div style="display: flex; gap: 3px; margin-top: 5px;">
                     <?php for($i = 0; $i < 5; $i++): ?>
                         <i class="fas fa-star" style="color: var(--secondary-color); font-size: 0.9rem;"></i>
@@ -212,9 +250,9 @@ $avg_rating = $avg_row && $avg_row['avg_rating'] !== null ? round((float)$avg_ro
                     <i class="fas fa-user-tie" style="font-size: 2rem; color: white;"></i>
                 </div>
                 <h3 style="font-size: 3rem; color: var(--primary-color); margin-bottom: 10px; font-weight: 700;">
-                    <?php echo count($barbers); ?>+
+                    <?php echo $total_barbers; ?>
                 </h3>
-                <p style="color: var(--text-dark); font-size: 1.1rem; font-weight: 500; margin-bottom: 5px;">Barber chuyên nghiệp</p>
+                <p style="color: var(--text-dark); font-size: 1.1rem; font-weight: 500; margin-bottom: 5px;"><?php echo $barber_label; ?></p>
                 <p style="color: var(--text-light); font-size: 0.95rem; margin: 0;">Đội ngũ tận tâm</p>
             </div>
         </div>

@@ -130,6 +130,12 @@ $recent_bookings = $stmt->fetchAll();
                     <a href="<?php echo BASE_URL; ?>admin/reviews.php" class="btn btn-primary">
                         <i class="fas fa-star"></i> Quản lý đánh giá
                     </a>
+                    <a href="<?php echo BASE_URL; ?>admin/statistics.php" class="btn btn-primary">
+                        <i class="fas fa-chart-line"></i> Quản lý thống kê
+                    </a>
+                    <a href="<?php echo BASE_URL; ?>admin/settings.php" class="btn btn-secondary">
+                        <i class="fas fa-cog"></i> Cài đặt
+                    </a>
                 </div>
             </div>
         </div>
