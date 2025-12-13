@@ -54,7 +54,7 @@ $total_reviews = $rating_data['total_reviews'] ?? 0;
             <div>
                 <div class="card-img" style="height: 400px;">
                     <?php if (!empty($service['image'])): ?>
-                        <img src="<?php echo BASE_URL . htmlspecialchars($service['image']); ?>" alt="<?php echo htmlspecialchars($service['name']); ?>" style="width:100%; height:100%; object-fit: cover;">
+                        <img src="<?php echo getImageUrl($service['image']); ?>" alt="<?php echo htmlspecialchars($service['name']); ?>" style="width:100%; height:100%; object-fit: cover;">
                     <?php else: ?>
                         <i class="fas fa-cut" style="font-size: 5rem;"></i>
                     <?php endif; ?>

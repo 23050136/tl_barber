@@ -23,40 +23,49 @@ if ($service_id) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = sanitize($_POST['name'] ?? '');
     $description = sanitize($_POST['description'] ?? '');
-    $image = sanitize($_POST['image'] ?? '');
     $price = floatval($_POST['price'] ?? 0);
     $duration = intval($_POST['duration'] ?? 0);
     $is_featured = isset($_POST['is_featured']) ? 1 : 0;
     
-    if (empty($name) || $price <= 0 || $duration <= 0) {
-        $error = 'Vui lòng điền đầy đủ thông tin';
+    // Handle image upload or URL
+    $old_image = $service['image'] ?? '';
+    $image_result = handleImageUpload($_FILES['image_file'] ?? [], $old_image);
+    
+    if (is_array($image_result) && isset($image_result['error'])) {
+        $error = $image_result['error'];
     } else {
-        if ($service_id && $service) {
-            // Update
-            $stmt = $pdo->prepare("
-                UPDATE services 
-                SET name = ?, description = ?, price = ?, duration = ?, is_featured = ?, image = ?
-                WHERE id = ?
-            ");
-            if ($stmt->execute([$name, $description, $price, $duration, $is_featured, $image, $service_id])) {
-                $success = 'Cập nhật dịch vụ thành công';
-                $service = $pdo->prepare("SELECT * FROM services WHERE id = ?");
-                $service->execute([$service_id]);
-                $service = $service->fetch();
-            } else {
-                $error = 'Có lỗi xảy ra';
-            }
+        $image = $image_result;
+        
+        if (empty($name) || $price <= 0 || $duration <= 0) {
+            $error = 'Vui lòng điền đầy đủ thông tin';
         } else {
-            // Insert
-            $stmt = $pdo->prepare("
-                INSERT INTO services (name, description, price, duration, is_featured, image)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ");
-            if ($stmt->execute([$name, $description, $price, $duration, $is_featured, $image])) {
-                $success = 'Thêm dịch vụ thành công';
-                redirect(BASE_URL . 'admin/services.php');
+            if ($service_id && $service) {
+                // Update
+                $stmt = $pdo->prepare("
+                    UPDATE services 
+                    SET name = ?, description = ?, price = ?, duration = ?, is_featured = ?, image = ?
+                    WHERE id = ?
+                ");
+                if ($stmt->execute([$name, $description, $price, $duration, $is_featured, $image, $service_id])) {
+                    $success = 'Cập nhật dịch vụ thành công';
+                    $service = $pdo->prepare("SELECT * FROM services WHERE id = ?");
+                    $service->execute([$service_id]);
+                    $service = $service->fetch();
+                } else {
+                    $error = 'Có lỗi xảy ra';
+                }
             } else {
-                $error = 'Có lỗi xảy ra';
+                // Insert
+                $stmt = $pdo->prepare("
+                    INSERT INTO services (name, description, price, duration, is_featured, image)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ");
+                if ($stmt->execute([$name, $description, $price, $duration, $is_featured, $image])) {
+                    $success = 'Thêm dịch vụ thành công';
+                    redirect(BASE_URL . 'admin/services.php');
+                } else {
+                    $error = 'Có lỗi xảy ra';
+                }
             }
         }
     }
@@ -89,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             <?php endif; ?>
             
-            <form method="POST" action="">
+            <form method="POST" action="" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="name"><i class="fas fa-tag"></i> Tên dịch vụ *</label>
                     <input type="text" id="name" name="name" class="form-control" required
@@ -102,13 +111,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 
                 <div class="form-group">
-                    <label for="image"><i class="fas fa-image"></i> Đường dẫn ảnh (tùy chọn)</label>
-                    <input type="text" id="image" name="image" class="form-control"
-                           placeholder="vd: images/services/cat-toc.jpg hoặc https://..."
-                           value="<?php echo htmlspecialchars($service['image'] ?? $_POST['image'] ?? ''); ?>">
-                    <small style="color: var(--text-light);">
-                        Dùng đường dẫn tương đối trong thư mục dự án (vd: images/services/ten-anh.jpg) hoặc URL tuyệt đối.
-                    </small>
+                    <label><i class="fas fa-image"></i> Ảnh dịch vụ</label>
+                    
+                    <!-- Current image preview -->
+                    <?php if (!empty($service['image'])): ?>
+                        <div style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-light); border-radius: 5px;">
+                            <p style="margin-bottom: 0.5rem; font-weight: bold;">Ảnh hiện tại:</p>
+                            <img src="<?php echo getImageUrl($service['image']); ?>" 
+                                 alt="Preview" 
+                                 style="max-width: 200px; max-height: 200px; object-fit: cover; border-radius: 5px; border: 2px solid var(--border-color);">
+                        </div>
+                    <?php endif; ?>
+                    
+                    <!-- Upload from computer -->
+                    <div style="margin-bottom: 1rem;">
+                        <label for="image_file" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">
+                            <i class="fas fa-upload"></i> Tải ảnh lên từ máy tính
+                        </label>
+                        <input type="file" 
+                               id="image_file" 
+                               name="image_file" 
+                               accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                               class="form-control"
+                               onchange="previewImage(this)">
+                        <small style="color: var(--text-light); display: block; margin-top: 0.5rem;">
+                            Chấp nhận: JPG, PNG, GIF, WEBP (tối đa 5MB)
+                        </small>
+                        <div id="image_preview" style="margin-top: 1rem; display: none;">
+                            <img id="preview_img" src="" alt="Preview" style="max-width: 200px; max-height: 200px; object-fit: cover; border-radius: 5px; border: 2px solid var(--border-color);">
+                        </div>
+                    </div>
+                    
+                    <!-- OR separator -->
+                    <div style="text-align: center; margin: 1rem 0; position: relative;">
+                        <hr style="border: none; border-top: 1px solid var(--border-color);">
+                        <span style="background: white; padding: 0 1rem; color: var(--text-light); position: relative; top: -10px;">HOẶC</span>
+                    </div>
+                    
+                    <!-- Enter URL from Google or other sources -->
+                    <div>
+                        <label for="image_url" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">
+                            <i class="fas fa-link"></i> Nhập link ảnh từ Google hoặc nguồn khác
+                        </label>
+                        <input type="url" 
+                               id="image_url" 
+                               name="image_url" 
+                               class="form-control"
+                               placeholder="https://example.com/image.jpg hoặc đường dẫn tương đối"
+                               value="<?php echo (!empty($service['image']) && filter_var($service['image'], FILTER_VALIDATE_URL)) ? htmlspecialchars($service['image']) : ''; ?>">
+                        <small style="color: var(--text-light); display: block; margin-top: 0.5rem;">
+                            Dán link ảnh từ Google Images hoặc bất kỳ nguồn nào. Hệ thống sẽ ưu tiên file upload nếu có.
+                        </small>
+                    </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -140,6 +194,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 </div>
+
+<script>
+function previewImage(input) {
+    const preview = document.getElementById('image_preview');
+    const previewImg = document.getElementById('preview_img');
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            preview.style.display = 'block';
+        }
+        
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        preview.style.display = 'none';
+    }
+}
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
 
