@@ -28,7 +28,7 @@ $stmt = $pdo->prepare("
 $stmt->execute([$service_id]);
 $barbers = $stmt->fetchAll();
 
-// Get reviews for this service
+// Get reviews for this service with admin replies
 $stmt = $pdo->prepare("
     SELECT r.*, u.full_name
     FROM reviews r
@@ -192,6 +192,22 @@ $total_reviews = $rating_data['total_reviews'] ?? 0;
                             <small style="color: var(--text-light);">
                                 <?php echo formatDate($review['created_at']); ?>
                             </small>
+                            
+                            <!-- Admin Reply -->
+                            <?php if (!empty($review['reply'])): ?>
+                                <div style="margin-top: 1rem; padding: 1rem; background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white; border-radius: 8px; margin-left: 1rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                        <i class="fas fa-store"></i>
+                                        <strong>TL Barber</strong>
+                                        <span style="font-size: 0.85rem; opacity: 0.9; margin-left: auto;">
+                                            <?php echo formatDateTime($review['reply_at']); ?>
+                                        </span>
+                                    </div>
+                                    <p style="margin: 0; line-height: 1.6; font-size: 0.95rem;">
+                                        <?php echo nl2br(htmlspecialchars($review['reply'])); ?>
+                                    </p>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 </div>

@@ -39,7 +39,7 @@ foreach ($bookings as $booking) {
             INSERT INTO notifications (user_id, booking_id, type, title, message)
             VALUES (?, ?, 'booking_confirmed', 'Lịch đặt đã được xác nhận tự động', ?)
         ");
-        $message = "Lịch đặt của bạn đã được xác nhận tự động. Vui lòng đến đúng giờ!";
+        $message = "Lịch đặt của bạn đã được xác nhận tự động. Vui lòng đến đúng giờ! Bạn có thể đánh giá dịch vụ sau khi sử dụng.";
         $stmt->execute([$booking['user_id'], $booking['id'], $message]);
         
         $confirmed++;

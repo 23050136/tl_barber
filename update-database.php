@@ -42,6 +42,31 @@ try {
         }
     }
     
+    // Add reply columns to reviews table
+    echo "\nAdding reply columns to reviews table...\n";
+    $review_columns = [
+        'reply' => "ALTER TABLE reviews ADD COLUMN reply TEXT DEFAULT NULL",
+        'reply_at' => "ALTER TABLE reviews ADD COLUMN reply_at TIMESTAMP NULL DEFAULT NULL"
+    ];
+    
+    foreach ($review_columns as $column_name => $sql) {
+        try {
+            $stmt = $pdo->query("SHOW COLUMNS FROM reviews LIKE '$column_name'");
+            if ($stmt->rowCount() > 0) {
+                echo "✓ Column 'reviews.$column_name' already exists\n";
+            } else {
+                $pdo->exec($sql);
+                echo "✓ Added column: reviews.$column_name\n";
+            }
+        } catch (PDOException $e) {
+            if (strpos($e->getMessage(), 'Duplicate column') === false) {
+                echo "⚠ Error with reviews.$column_name: " . $e->getMessage() . "\n";
+            } else {
+                echo "✓ Column 'reviews.$column_name' already exists\n";
+            }
+        }
+    }
+    
     // Create auto_confirmation_settings table
     echo "\nChecking auto_confirmation_settings table...\n";
     try {

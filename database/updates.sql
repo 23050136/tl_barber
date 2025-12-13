@@ -20,3 +20,8 @@ CREATE TABLE IF NOT EXISTS auto_confirmation_settings (
 
 INSERT INTO auto_confirmation_settings (is_enabled, auto_confirm_hours) VALUES (FALSE, 24);
 
+-- Add reply columns to reviews table for admin responses
+ALTER TABLE reviews 
+ADD COLUMN IF NOT EXISTS reply TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS reply_at TIMESTAMP NULL DEFAULT NULL;
+

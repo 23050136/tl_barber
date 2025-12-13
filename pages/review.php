@@ -15,6 +15,7 @@ if (!$booking_id) {
 $pdo = getDBConnection();
 
 // Get booking details
+// Cho phép đánh giá ngay sau khi admin đã duyệt lịch (confirmed) hoặc đã hoàn thành (completed)
 $stmt = $pdo->prepare("
     SELECT b.*, s.name as service_name, s.id as service_id, s.duration,
            bar.id as barber_id
@@ -22,13 +23,7 @@ $stmt = $pdo->prepare("
     JOIN services s ON b.service_id = s.id
     JOIN barbers bar ON b.barber_id = bar.id
     WHERE b.id = ? AND b.user_id = ?
-          AND (
-              b.status = 'completed'
-              OR (
-                  b.status = 'confirmed'
-                  AND DATE_ADD(CONCAT(b.booking_date, ' ', b.booking_time), INTERVAL s.duration MINUTE) <= NOW()
-              )
-          )
+          AND b.status IN ('confirmed', 'completed')
 ");
 $stmt->execute([$booking_id, $current_user['id']]);
 $booking = $stmt->fetch();

@@ -50,17 +50,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_booking'])) {
     }
 }
 
-// Get user bookings
-$stmt = $pdo->prepare("
-    SELECT b.*, s.name as service_name, s.price, s.duration,
-           u2.full_name as barber_name
-    FROM bookings b
-    JOIN services s ON b.service_id = s.id
-    JOIN barbers bar ON b.barber_id = bar.id
-    JOIN users u2 ON bar.user_id = u2.id
-    WHERE b.user_id = ?
-    ORDER BY b.booking_date DESC, b.booking_time DESC
-");
+// Check if reply columns exist
+try {
+    $pdo->query("SELECT reply, reply_at FROM reviews LIMIT 1");
+    $reply_columns_exist = true;
+} catch (PDOException $e) {
+    $reply_columns_exist = false;
+}
+
+// Get user bookings with reviews
+if ($reply_columns_exist) {
+    $stmt = $pdo->prepare("
+        SELECT b.*, s.name as service_name, s.price, s.duration,
+               u2.full_name as barber_name,
+               r.id as review_id, r.rating, r.comment as review_comment, 
+               r.reply as admin_reply, r.reply_at, r.created_at as review_created_at
+        FROM bookings b
+        JOIN services s ON b.service_id = s.id
+        JOIN barbers bar ON b.barber_id = bar.id
+        JOIN users u2 ON bar.user_id = u2.id
+        LEFT JOIN reviews r ON b.id = r.booking_id
+        WHERE b.user_id = ?
+        ORDER BY b.booking_date DESC, b.booking_time DESC
+    ");
+} else {
+    // Fallback query without reply columns
+    $stmt = $pdo->prepare("
+        SELECT b.*, s.name as service_name, s.price, s.duration,
+               u2.full_name as barber_name,
+               r.id as review_id, r.rating, r.comment as review_comment, 
+               r.created_at as review_created_at,
+               NULL as admin_reply, NULL as reply_at
+        FROM bookings b
+        JOIN services s ON b.service_id = s.id
+        JOIN barbers bar ON b.barber_id = bar.id
+        JOIN users u2 ON bar.user_id = u2.id
+        LEFT JOIN reviews r ON b.id = r.booking_id
+        WHERE b.user_id = ?
+        ORDER BY b.booking_date DESC, b.booking_time DESC
+    ");
+}
 $stmt->execute([$current_user['id']]);
 $bookings = $stmt->fetchAll();
 
@@ -81,6 +110,11 @@ if ($qr_column_exists) {
             $stmt->execute([$qr_code, $booking['id']]);
         }
     }
+}
+
+// Show notice if reply columns don't exist
+if (!$reply_columns_exist) {
+    $error = '⚠️ Vui lòng cập nhật database để sử dụng tính năng phản hồi đánh giá. <a href="' . BASE_URL . 'add_reply_columns.php" style="color: white; text-decoration: underline; font-weight: bold;">Nhấn vào đây để cập nhật</a>';
 }
 ?>
 
@@ -182,13 +216,9 @@ if ($qr_column_exists) {
                             <?php endif; ?>
                             
                             <?php
-                            // Cho phép đánh giá khi đã hoàn thành
-                            // hoặc đã xác nhận và đã qua thời gian kết thúc (start + duration)
-                            $booking_start = strtotime($booking['booking_date'] . ' ' . $booking['booking_time']);
-                            $duration_minutes = intval($booking['duration'] ?? 0);
-                            $booking_end = $booking_start + ($duration_minutes > 0 ? $duration_minutes * 60 : 0);
-                            $is_past_confirmed = ($booking['status'] === 'confirmed' && time() >= $booking_end);
-                            $can_review = ($booking['status'] === 'completed') || $is_past_confirmed;
+                            // Cho phép đánh giá ngay sau khi admin đã duyệt lịch (confirmed)
+                            // hoặc khi đã hoàn thành (completed)
+                            $can_review = in_array($booking['status'], ['confirmed', 'completed']);
                             ?>
                             <?php if ($can_review): ?>
                                 <?php
@@ -208,6 +238,53 @@ if ($qr_column_exists) {
                                 <?php endif; ?>
                             <?php endif; ?>
                         </div>
+                        
+                        <!-- Feedback Section -->
+                        <?php if (!empty($booking['review_id'])): ?>
+                            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid var(--border-color);">
+                                <h4 style="color: var(--primary-color); margin-bottom: 1rem;">
+                                    <i class="fas fa-star"></i> Feedback của bạn
+                                </h4>
+                                
+                                <!-- User Review -->
+                                <div style="background: var(--bg-light); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                                        <div style="display: flex; gap: 0.25rem;">
+                                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                                <?php if ($i <= $booking['rating']): ?>
+                                                    <i class="fas fa-star" style="color: var(--secondary-color);"></i>
+                                                <?php else: ?>
+                                                    <i class="far fa-star" style="color: var(--text-light);"></i>
+                                                <?php endif; ?>
+                                            <?php endfor; ?>
+                                        </div>
+                                        <span style="color: var(--text-light); font-size: 0.85rem;">
+                                            <?php echo formatDateTime($booking['review_created_at']); ?>
+                                        </span>
+                                    </div>
+                                    <p style="color: var(--text-color); margin: 0; line-height: 1.6;">
+                                        "<?php echo htmlspecialchars($booking['review_comment']); ?>"
+                                    </p>
+                                </div>
+                                
+                                <!-- Admin Reply -->
+                                <?php if (!empty($booking['admin_reply'])): ?>
+                                    <div style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white; padding: 1rem; border-radius: 8px; margin-left: 2rem; position: relative;">
+                                        <div style="position: absolute; left: -10px; top: 15px; width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 10px solid var(--primary-color);"></div>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                            <i class="fas fa-store" style="font-size: 1.2rem;"></i>
+                                            <strong>TL Barber</strong>
+                                            <span style="font-size: 0.85rem; opacity: 0.9; margin-left: auto;">
+                                                <?php echo formatDateTime($booking['reply_at']); ?>
+                                            </span>
+                                        </div>
+                                        <p style="margin: 0; line-height: 1.6;">
+                                            <?php echo nl2br(htmlspecialchars($booking['admin_reply'])); ?>
+                                        </p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             </div>
